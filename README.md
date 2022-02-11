@@ -86,3 +86,7 @@ logger.LogError(exc, "Operation failed! Resource was:\n{resource}", newResource.
 ```
 
 <mark>**Note that Microsoft recommends to not us `$"{var} text"` interpolation but to use placeholders and parameters that are passed to the log method.**</mark>
+
+## More
+
+**SimpleFileLogger** internally uses a `BlockingCollection<LogMessage>` in a long running `Task` that decouples the logging from the working thread and prevents concurrent file access in scenarios where a lot of log messages have to be written in a short period of time.
