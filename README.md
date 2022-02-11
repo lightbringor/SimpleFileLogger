@@ -2,7 +2,7 @@
 
 Lightweight library for writing log information to files using the .NET `ILogger<T>` interface. For more information regarding the usage of `ILogger<T>` see the [Microsoft Documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0)
 
-## How To Use
+## Setup
 
 **The minimum required framework version is `.NET 6`**
 
@@ -11,6 +11,10 @@ The library is available as a NuGet package from source `O:\Projects\Software De
 After including the package in the project, it can be added to the service collection in the startup code:
 
 ```csharp
+using Dc.Ops.SimpleFileLogger;
+
+var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddLogging(logBuilder =>
 {
     logBuilder.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
@@ -42,11 +46,13 @@ In the section below named `FileLoggerOptions` the options for file logging are 
 
 The file names provided here are extended by `_yyyy-MM-dd.log`. So a new log file is created every day
 
-***Note:** Currently old files are not removed automatically*
+<mark>**Note: Currently old log files are not removed automatically which can result in high disk space usage when detailed log levels are enabled.**</mark>
 
 `LogLevel`s can be change at any time without restarting the application. Changes in file names only apply after a restart.
 
 That's all regarding the configuration. Now you only need to add a `ILogger<T>` to the constructor of classes you want to log information from and call the corresponding methods. Log information from existing framework classes will also be written automatically.
+
+## Examples
 
 ```csharp
     // Constructor
@@ -70,3 +76,13 @@ That's all regarding the configuration. Now you only need to add a `ILogger<T>` 
         }
     }
 ```
+
+### Logging of complex objects
+
+The library provides an extension method `ToJson()` for `object` that serializes the object to `JSON`.
+
+```csharp
+logger.LogError(exc, "Operation failed! Resource was:\n{resource}", newResource.ToJson());
+```
+
+<mark>**Note that Microsoft recommends to not us `$"{var} text"` interpolation but to use placeholders and parameters that are passed to the log method.**</mark>
