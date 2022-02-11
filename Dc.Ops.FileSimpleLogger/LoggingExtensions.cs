@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Dc.Ops.SimpleFileLogger
 {
-    internal static class LoggingExtensions
+    public static class LoggingExtensions
     {
         static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
         {
