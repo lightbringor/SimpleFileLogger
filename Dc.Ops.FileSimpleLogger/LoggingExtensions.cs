@@ -13,11 +13,14 @@ namespace Dc.Ops.SimpleFileLogger
     {
         static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
         {
-            WriteIndented = true,
+            WriteIndented = true, 
+            ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
         };
-        public static string ToJson(this object obj)
+        public static string ToJson(this object obj, ILogger? logger = null, LogLevel level = LogLevel.None)
         {
-            return JsonSerializer.Serialize(obj, jsonOptions);
+            if (logger == null || logger.IsEnabled(level))
+                return JsonSerializer.Serialize(obj, jsonOptions);
+            return string.Empty;
         }
     }
 }
