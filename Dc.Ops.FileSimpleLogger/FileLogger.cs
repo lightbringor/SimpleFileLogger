@@ -42,9 +42,17 @@ namespace Dc.Ops.SimpleFileLogger
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            var fullFilePath = $"{filePath}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
-            Log(fullFilePath, logLevel, eventId, state, exception, formatter);
+            var fileNameAddition = "";
+            if (eventId.Id > 0)
+            {
+                if (!string.IsNullOrEmpty(eventId.Name))
+                    fileNameAddition = $"_{eventId.Name}";
+                else
+                    fileNameAddition = $"_{eventId.Id.ToString()}";
+            }
+            var fullFilePath = $"{filePath}{fileNameAddition}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
 
+            Log(fullFilePath, logLevel, eventId, state, exception, formatter);
         }
     }
 }

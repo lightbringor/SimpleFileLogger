@@ -16,6 +16,7 @@ public class IndexModel : PageModel
     public void OnGet()
     {
         var obj = new { a = "a", b = 2};
-        _logger.LogDebug("OnGet {obj}", obj.ToJson(_logger, LogLevel.Debug));
+        var eventId = new EventId(1, "additionalName");
+        _logger.LogDebug(eventId, "OnGet {obj}", obj.ToJson(_logger, LogLevel.Debug));
     }
 }
