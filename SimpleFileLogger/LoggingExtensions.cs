@@ -18,7 +18,7 @@ namespace SimpleFileLogger
         };
         public static string ToJson(this object obj, ILogger? logger = null, LogLevel level = LogLevel.None)
         {
-            if (logger == null || logger.IsEnabled(level))
+            if (obj!= null && (logger == null || logger.IsEnabled(level)))
                 return JsonSerializer.Serialize(obj, jsonOptions);
             return string.Empty;
         }
