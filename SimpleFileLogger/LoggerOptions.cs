@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dc.Ops.SimpleFileLogger
+namespace SimpleFileLogger
 {
     public class LoggerOptions
     {

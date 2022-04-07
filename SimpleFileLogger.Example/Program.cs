@@ -1,4 +1,4 @@
-using Dc.Ops.SimpleFileLogger;
+using SimpleFileLogger;
 
 var builder = WebApplication.CreateBuilder(args);
 

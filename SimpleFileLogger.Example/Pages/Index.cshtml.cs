@@ -1,5 +1,4 @@
-﻿using Dc.Ops.SimpleFileLogger;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace SimpleFileLogger.Example.Pages;

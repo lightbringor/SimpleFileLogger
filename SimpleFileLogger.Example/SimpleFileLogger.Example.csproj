@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\Dc.Ops.FileSimpleLogger\Dc.Ops.SimpleFileLogger.csproj" />
+    <ProjectReference Include="..\SimpleFileLogger\SimpleFileLogger.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

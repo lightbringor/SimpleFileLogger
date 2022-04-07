@@ -7,13 +7,13 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Dc.Ops.SimpleFileLogger
+namespace SimpleFileLogger
 {
     public static class LoggingExtensions
     {
         static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
         {
-            WriteIndented = true, 
+            WriteIndented = true,
             ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
         };
         public static string ToJson(this object obj, ILogger? logger = null, LogLevel level = LogLevel.None)
