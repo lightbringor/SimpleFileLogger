@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Dc.Ops.SimpleFileLogger.sln",
+                "${workspaceFolder}/SimpleFileLogger.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/Dc.Ops.FileSimpleLogger/Dc.Ops.SimpleFileLogger.csproj",
+                "${workspaceFolder}/SimpleFileLogger/SimpleFileLogger.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Dc.Ops.FileSimpleLogger/Dc.Ops.SimpleFileLogger.csproj"
+                "${workspaceFolder}/SimpleFileLogger/SimpleFileLogger.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
