@@ -9,25 +9,40 @@ using System.Threading.Tasks;
 
 namespace SimpleFileLogger
 {
-    public class FileLoggerProvider : ILoggerProvider
+    public interface IFileLoggerProvider : ILoggerProvider
+    {
+        string LogFolder { get; }
+        Dictionary<int, EventOptions> EventOptionsDict { get; }
+
+        void AddToLogQueue(LogMessage logMessage);
+    }
+
+    public class FileLoggerProvider : IFileLoggerProvider
     {
         private readonly IOptions<LoggerOptions> options;
-        private readonly string logFolder;
+        public string LogFolder { get; }
         private readonly BlockingCollection<LogMessage> logQueue = new BlockingCollection<LogMessage>();
         private readonly Task processQueueTask;
+        public Dictionary<int, EventOptions> EventOptionsDict { get; } = new Dictionary<int, EventOptions>();
 
 
         public FileLoggerProvider(IOptions<LoggerOptions> options) // options get provided by DI
         {
             this.options = options;
 
-            logFolder = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location) ?? "", options.Value.LogFolder);
-            if (logFolder == null)
-                logFolder = "./";
+            if (options.Value.EventOptionsCollection != null)
+            {
+                foreach (var eventOptions in options.Value.EventOptionsCollection)
+                {
+                    EventOptionsDict[eventOptions.Id] = eventOptions;
+                }
+            }
 
-            processQueueTask = Task.Factory.StartNew(
-                () => ProcessLogMessageQueue(),
-                TaskCreationOptions.LongRunning);
+            LogFolder = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location) ?? "", options.Value.LogFolder);
+            if (LogFolder == null)
+                LogFolder = "./";
+
+            processQueueTask = Task.Factory.StartNew(() => ProcessLogMessageQueue(), TaskCreationOptions.LongRunning);
         }
 
         public ILogger CreateLogger(string categoryName)
@@ -40,17 +55,10 @@ namespace SimpleFileLogger
             if (fileName == null)
                 fileName = "Default";
 
-            var filePath = Path.Combine(logFolder, fileName);
-
-            // fileName might contain sub directories, therefore check the directory existance of the full path
-            var directory = Path.GetDirectoryName(filePath);
-            if (directory != null && !Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
-
-            return new FileLogger(this, filePath);
+            return new FileLogger(this, fileName);
         }
 
-        internal void AddToLogQueue(LogMessage logMessage)
+        public void AddToLogQueue(LogMessage logMessage)
         {
             try
             {
@@ -59,16 +67,20 @@ namespace SimpleFileLogger
             }
             catch (Exception exc)
             {
-                try { File.WriteAllText(Path.Combine(logFolder, "LoggingFailures.log"), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {exc}"); }
+                try { File.WriteAllText(Path.Combine(LogFolder, "LoggingFailures.log"), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {exc}"); }
                 catch (Exception) { }// if loging the log error also fails, don't do anything
             }
         }
 
+        /// <summary>
+        /// Runs as a separate Task. GetConsumingEnumerable() will remove items 
+        /// from logQueue and block until new messageL arrive.
+        /// </summary>
         private void ProcessLogMessageQueue()
         {
             foreach (var message in logQueue.GetConsumingEnumerable())
             {
-                // if the are a lot of frequent log messages, opening and closing the file every time might be unperformant ==> should be reconsidered
+                // if there are a lot of frequent log messages, opening and closing the file every time might be unperformant ==> should be reconsidered
                 File.AppendAllText(message.FullFilePath, message.Content);
             }
         }

@@ -9,13 +9,13 @@ namespace SimpleFileLogger
 {
     public class FileLogger : ILogger
     {
-        private readonly FileLoggerProvider provider;
-        private readonly string filePath;
+        private readonly IFileLoggerProvider provider;
+        private readonly string fileName;
 
-        public FileLogger(FileLoggerProvider provider, string filePath)
+        public FileLogger(IFileLoggerProvider provider, string fileName)
         {
             this.provider = provider;
-            this.filePath = filePath;
+            this.fileName = fileName;
 
         }
 
@@ -42,15 +42,44 @@ namespace SimpleFileLogger
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            var fileNameAddition = "";
-            if (eventId.Id > 0)
+            var nameExtension = "";
+            var subFolder = "";
+            if (provider.EventOptionsDict.ContainsKey(eventId.Id))
             {
-                if (!string.IsNullOrEmpty(eventId.Name))
-                    fileNameAddition = $"_{eventId.Name}";
-                else
-                    fileNameAddition = $"_{eventId.Id.ToString()}";
+                var eventOptions = provider.EventOptionsDict[eventId.Id];
+                if (eventOptions.NameExtensionFromEventName)
+                {
+                    if (!string.IsNullOrEmpty(eventId.Name))
+                        nameExtension = $"_{eventId.Name}";
+                    else
+                        nameExtension = $"_{eventId.Id.ToString()}";
+                }
+                else if (eventOptions.NameExtension != null)
+                {
+                    nameExtension = eventOptions.NameExtension;
+                }
+
+                if (eventOptions.SubFolderFromEventName)
+                {
+                    if (!string.IsNullOrEmpty(eventId.Name))
+                        subFolder = eventId.Name;
+                    else
+                        subFolder = eventId.Id.ToString();
+                }
+                else if (eventOptions.SubFolder != null)
+                {
+                    subFolder = eventOptions.SubFolder;
+                }
             }
-            var fullFilePath = $"{filePath}{fileNameAddition}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
+
+            var filePath = Path.Combine(provider.LogFolder, subFolder, fileName);
+            // fileName might contain sub directories, therefore check the directory existance of the full path
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+
+            var fullFilePath = $"{filePath}{nameExtension}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
 
             Log(fullFilePath, logLevel, eventId, state, exception, formatter);
         }

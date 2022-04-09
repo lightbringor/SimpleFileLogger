@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleFileLogger
 {
-    internal class LogMessage
+    public class LogMessage
     {
         public LogMessage(string fullFilePath, string content)
         {
