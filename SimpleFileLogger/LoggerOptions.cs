@@ -10,7 +10,7 @@ namespace SimpleFileLogger
     {
         public string LogFolder { get; set; } = "./";
         public Dictionary<string, string> FileNamesWithoutExtension { get; set; } = new Dictionary<string, string>();
-        public IEnumerable<EventOptions>? EventOptionsCollection { get; set; }
+        public IEnumerable<EventOptions>? EventOptions { get; set; }
     }
 
     

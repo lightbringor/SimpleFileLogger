@@ -30,9 +30,9 @@ namespace SimpleFileLogger
         {
             this.options = options;
 
-            if (options.Value.EventOptionsCollection != null)
+            if (options.Value.EventOptions != null)
             {
-                foreach (var eventOptions in options.Value.EventOptionsCollection)
+                foreach (var eventOptions in options.Value.EventOptions)
                 {
                     EventOptionsDict[eventOptions.Id] = eventOptions;
                 }
