@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,20 +14,32 @@ namespace SimpleFileLogger
     {
         string LogFolder { get; }
         Dictionary<int, EventOptions> EventOptionsDict { get; }
+        event EventHandler<MessageLoggedEventArgs> MessageLogged;
 
         void AddToLogQueue(LogMessage logMessage);
     }
 
-    public class FileLoggerProvider : IFileLoggerProvider
+    public class MessageLoggedEventArgs : EventArgs
     {
-        private readonly IOptions<LoggerOptions> options;
+        public LogMessage LogMessage { get; set; }
+
+        public MessageLoggedEventArgs(LogMessage logMessage){
+            LogMessage = logMessage;
+        }
+    }
+
+    public class FileLoggerProvider : IFileLoggerProvider, ILoggerProvider
+    {
+        public Dictionary<int, EventOptions> EventOptionsDict { get; } = new Dictionary<int, EventOptions>();
         public string LogFolder { get; }
+        public event EventHandler<MessageLoggedEventArgs> MessageLogged;
+
+        private readonly IOptions<FileLoggerOptions> options;
         private readonly BlockingCollection<LogMessage> logQueue = new BlockingCollection<LogMessage>();
         private readonly Task processQueueTask;
-        public Dictionary<int, EventOptions> EventOptionsDict { get; } = new Dictionary<int, EventOptions>();
 
 
-        public FileLoggerProvider(IOptions<LoggerOptions> options) // options get provided by DI
+        public FileLoggerProvider(IOptions<FileLoggerOptions> options) // options get provided by DI
         {
             this.options = options;
 
@@ -82,6 +95,7 @@ namespace SimpleFileLogger
             {
                 // if there are a lot of frequent log messages, opening and closing the file every time might be unperformant ==> should be reconsidered
                 File.AppendAllText(message.FullFilePath, message.Content);
+                MessageLogged?.Invoke(this, new MessageLoggedEventArgs(message));
             }
         }
 

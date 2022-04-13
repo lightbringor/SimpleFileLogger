@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleFileLogger
 {
-    public class LoggerOptions
+    public class FileLoggerOptions
     {
         public string LogFolder { get; set; } = "./";
         public Dictionary<string, string> FileNamesWithoutExtension { get; set; } = new Dictionary<string, string>();

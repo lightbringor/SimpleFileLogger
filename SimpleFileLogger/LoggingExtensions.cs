@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,9 +19,20 @@ namespace SimpleFileLogger
         };
         public static string ToJson(this object obj, ILogger? logger = null, LogLevel level = LogLevel.None)
         {
-            if (obj!= null && (logger == null || logger.IsEnabled(level)))
+            if (obj != null && (logger == null || logger.IsEnabled(level)))
                 return JsonSerializer.Serialize(obj, jsonOptions);
             return string.Empty;
+        }
+
+        public static IServiceCollection AddSimpleFileLogging(this IServiceCollection services, IConfiguration configuration, string configSection = "Logging:FileLoggerOptions")
+        {
+            services.AddLogging(logBuilder =>
+            {
+                logBuilder.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
+                logBuilder.Services.Configure<FileLoggerOptions>(options => configuration.GetSection(configSection).Bind(options));
+            });
+
+            return services;
         }
     }
 }
