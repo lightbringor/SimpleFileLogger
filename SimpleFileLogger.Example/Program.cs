@@ -1,12 +1,7 @@
 using SimpleFileLogger;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddLogging(logBuilder =>
-{
-    logBuilder.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
-    logBuilder.Services.Configure<LoggerOptions>(options => builder.Configuration.GetSection("Logging:FileLoggerOptions").Bind(options));
-});
+builder.Services.AddSimpleFileLogging(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
