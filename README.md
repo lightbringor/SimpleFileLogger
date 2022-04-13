@@ -2,26 +2,66 @@
 
 Lightweight library for writing log information to files using the .NET `ILogger<T>` interface. For more information regarding the usage of `ILogger<T>` see the [Microsoft Documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0)
 
-## Setup
+## Quick Start
 
 **The minimum required framework version is `.NET 6`**
 
 The library is available as a NuGet package from source `O:\Projects\Software Development\NuGet`
 
-After including the package in the project, it can be added to the service collection in the startup code:
+After including the package in the project, SimpleFileLogger exposes an extension method
+to add file logging with only one line of code during startup:
 
 ```csharp
 using SimpleFileLogger;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSimpleFileLogging(builder.Configuration);
+```
+
+With only a minimum of configuration you can start logging to `./Logs/Default_yyyy-mm-dd.log` immediately:
+
+```json
+    "Logging": { 
+        "LogLevel": {
+            // Define LogLevels here ...
+        },
+        "FileLoggerOptions": {
+            "LogFolder": "./Logs",
+            "FileNamesWithoutExtension": {
+                "*": "Default"
+            }
+        }
+    }
+```
+
+## Detailed Setup
+
+If your file logging options are not located under `Logging:FileLoggerOptions` in `appsettings.json`, you can pass the section as a second parameter:
+
+```csharp
+builder.Services.AddSimpleFileLogging(builder.Configuration, "MyFileLoggingConfigSection");
+```
+
+If you prefer to provide the file logging options via code instead of `appsettings.json`, use the traditional way of configuration:
+
+```csharp
 builder.Services.AddLogging(logBuilder =>
 {
     logBuilder.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
-    logBuilder.Services.Configure<LoggerOptions>(options => builder.Configuration.GetSection("Logging:FileLoggerOptions").Bind(options));
+    logBuilder.Services.Configure<LoggerOptions>(options => ConfigureFileLogging(options));
 });
+
+private void ConfigureFileLogging(LoggerOptions options)
+{
+    options.LogFolder = "./Logs";
+    // ...
+}
 ```
-Configuration is provided via `appsettings.json`
+
+### Configuration
+
+Configuration should usually be provided via `appsettings.json` in section `Logging:FileLoggerOptions`
 
 ```json
     "Logging": { 
@@ -50,11 +90,11 @@ In the `LogLevel` section, the minimum level that leads to writing a log message
 
 In the section below named `FileLoggerOptions` the options for file logging are provided. You can specify a root folder with the `LogFolder` value. If it is not set, the directory of the application assembly is used as root. Then a file name **without extension** can be specified for each namespace or class that shall be logged in its own file. The path is relative to `LogFolder`. The entry `*` is mandatory and specifies the default log file used for any content that falls not in one of the namespace defined above.
 
-The file names provided here are extended by `_yyyy-MM-dd.log` (as long as nor further `EventOptions` are provided, see below). 
+The file names provided here are extended by `_yyyy-MM-dd.log` (as long as no further `EventOptions` are provided, see below). 
 So a new log file is created every day.
 
 To get more control over file names and log directories, certain options can be provided via the `EventOptions` array. The `EventId` provided for a call to `ILogger.Log(eventId, ...)` will be matched against the specified `EventOptions` objects.
-The follwing properties are available
+The follwing properties are available:
 
 - `Id`: `int` **mandatory** , must match the `EventId.Id` property provided for logging
 - `SubFolder`: `string` **optional** , a folder that will be inserted between the default `LogFolder` and the `FileName`. Can contain multiple directories
