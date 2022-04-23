@@ -101,12 +101,10 @@ The follwing properties are available:
   - e.g. `sub/path`
 - `NameExtension`: `string` **optional**, an addition that will be applied after the defined `FileName` and before the date.
   - e.g. `_nameExtension` --> `fileName_nameExtension_22-04-02.log`  (**note that the `_` here is part of the definition and will not be inserted automatically**) 
-- `SubFolderFromEventName`: `boolean` **optional**, if set to `true`, the sub folder to insert `LogFolder` and the `FileName`  will be taken dynamically from `EventId.Name` when calling `ILogger.Log(eventId, ...)`. If `EventId.Name` is `null` or empty, the `Id` number will be used
+- `SubFolderFromEventName`: `boolean` **optional**, if set to `true`, the sub folder to insert between `LogFolder` and the `FileName`  will be taken dynamically from `EventId.Name` when calling `ILogger.Log(eventId, ...)`. If `EventId.Name` is `null` or empty, the `Id` number will be used
 - `NameExtensionFromEventName`: `boolean` **optional**, if set to `true`, the exentsion applied to the `FileName` will be taken dynamically from `EventId.Name` when calling `ILogger.Log(eventId, ...)`. If `EventId.Name` is `null` or empty, the `Id` number will be used. **Here, an `_` will be inserted automatically between default file name and exension**
 
-<mark>**Note: Currently old log files are not removed automatically which can result in high disk space usage when detailed log levels are enabled.**</mark>
-
-`LogLevel`s can be change at any time without restarting the application. Changes in file names only apply after a restart.
+`LogLevel`s can be changed at any time without restarting the application. Changes in file names only apply after a restart.
 
 That's all regarding the configuration. Now you only need to add a `ILogger<T>` to the constructor of classes you want to log information from and call the corresponding methods. Log information from existing framework classes will also be written automatically.
 
@@ -161,8 +159,12 @@ logger.LogError(exc, "Operation failed! Resource was:\n{resourceJson}", newResou
 logger.LogTrace("Trace logging! largeObject is:\n{objJson}", largeObject.ToJson(logger, LogLevel.Trace));
 ```
 
+**Be carful with frequent logging of complex objects with a lot of references to other complex objects because the log size could increase rapidly. Advice is to do this only for a limited time when Trace or Debug logging is enabled.**
+
 <mark>**Note that Microsoft recommends to not us `$"{var} text"` interpolation but to use placeholders and parameters that are passed to the log method.**</mark>
 
 ## More
+
+<mark>**Note: Currently old log files are not removed automatically which can result in high disk space usage when detailed log levels are enabled.**</mark>
 
 **SimpleFileLogger** internally uses a `BlockingCollection<LogMessage>` in a long running `Task` that decouples the logging from the working thread and prevents concurrent file access in scenarios where a lot of log messages have to be written in a short period of time.

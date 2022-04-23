@@ -13,5 +13,10 @@ namespace SimpleFileLogger
         public IEnumerable<EventOptions>? EventOptions { get; set; }
     }
 
+    public class CleanupOtions {
+        public bool Active { get; set; }
+        
+    }
+
     
 }
