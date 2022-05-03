@@ -6,9 +6,10 @@ Lightweight library for writing log information to files using the .NET `ILogger
 
 **The minimum required framework version is `.NET 6`**
 
-The library is available as a NuGet package from source `O:\Projects\Software Development\NuGet`
+The library is available as a [NuGet package](https://www.nuget.org/packages/Lightbringer.SimpleFileLogger/) named 
+`Lightbringer.SimpleFileLogger`.
 
-After including the package in the project, SimpleFileLogger exposes an extension method
+After including the package in your project, SimpleFileLogger exposes an extension method
 to add file logging with only one line of code during startup:
 
 ```csharp
@@ -139,7 +140,7 @@ That's all regarding the configuration. Now you only need to add a `ILogger<T>` 
         obj.Name = "bar";
         var eventId = new EventId(10, obj.Name)
         // ...
-        // assuming that an EventOption definiton is set like {Id: 99, NameExtensionFromEventName: true}
+        // assuming that an EventOption definiton is set like {Id: 10, NameExtensionFromEventName: true}
         // the message goes into e.g. logs/MyClass_bar_2022-04-08.log
         logger.LogDebug(eventId, "Value set for {val}", obj.Value)
     }
