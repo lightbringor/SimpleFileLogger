@@ -78,6 +78,7 @@ Configuration should usually be provided via `appsettings.json` in section `Logg
                 "MyNamespace.MyClass": "MyClass",
                 "*": "Default"
             },
+            "NumberOfDaysToKeepLogs": 5,
             "EventOptions": [
                 { "Id": 99, "SubFolder": "Errors" },
                 { "Id": 1, "SubFolder": "Sub", "NameExtension": "AddName" },
@@ -93,6 +94,12 @@ In the section below named `FileLoggerOptions` the options for file logging are 
 
 The file names provided here are extended by `_yyyy-MM-dd.log` (as long as no further `EventOptions` are provided, see below). 
 So a new log file is created every day.
+
+**New in v1.1.3**
+
+**With the property `NumberOfDaysToKeepLogs` it can now be controlled how long log files will be stored. If this property
+is defined and has a value > 0, a method that checks for outdated log files will run on startup and then every hour.
+All `*.log` files within your defined `LogFolder` that are older than the number of defined days will be deleted.**
 
 To get more control over file names and log directories, certain options can be provided via the `EventOptions` array. The `EventId` provided for a call to `ILogger.Log(eventId, ...)` will be matched against the specified `EventOptions` objects.
 The follwing properties are available:
@@ -164,8 +171,10 @@ logger.LogTrace("Trace logging! largeObject is:\n{objJson}", largeObject.ToJson(
 
 <mark>**Note that Microsoft recommends to not us `$"{var} text"` interpolation but to use placeholders and parameters that are passed to the log method.**</mark>
 
+## Delete Old Log Files
+
 ## More
 
-<mark>**Note: Currently old log files are not removed automatically which can result in high disk space usage when detailed log levels are enabled.**</mark>
+
 
 **SimpleFileLogger** internally uses a `BlockingCollection<LogMessage>` in a long running `Task` that decouples the logging from the working thread and prevents concurrent file access in scenarios where a lot of log messages have to be written in a short period of time.

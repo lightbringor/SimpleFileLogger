@@ -23,7 +23,8 @@ namespace SimpleFileLogger
     {
         public LogMessage LogMessage { get; set; }
 
-        public MessageLoggedEventArgs(LogMessage logMessage){
+        public MessageLoggedEventArgs(LogMessage logMessage)
+        {
             LogMessage = logMessage;
         }
     }
@@ -32,12 +33,13 @@ namespace SimpleFileLogger
     {
         public Dictionary<int, EventOptions> EventOptionsDict { get; } = new Dictionary<int, EventOptions>();
         public string LogFolder { get; }
-        public event EventHandler<MessageLoggedEventArgs> MessageLogged;
+        public event EventHandler<MessageLoggedEventArgs>? MessageLogged;
 
         private readonly IOptions<FileLoggerOptions> options;
         private readonly BlockingCollection<LogMessage> logQueue = new BlockingCollection<LogMessage>();
         private readonly Task processQueueTask;
-
+        private ILogger cleanupLogger;
+        private System.Timers.Timer? cleanLogsTimer;
 
         public FileLoggerProvider(IOptions<FileLoggerOptions> options) // options get provided by DI
         {
@@ -55,7 +57,49 @@ namespace SimpleFileLogger
             if (LogFolder == null)
                 LogFolder = "./";
 
+            if (options.Value.NumberOfDaysToKeepLogs > 0)
+            {
+                cleanupLogger = CreateLogger("CleanupLogFiles");
+                cleanLogsTimer = new System.Timers.Timer(TimeSpan.FromSeconds(10).TotalMilliseconds);
+                cleanLogsTimer.Elapsed += (s, e) => CleanOldLogs();
+                cleanLogsTimer.AutoReset = true;
+                cleanLogsTimer.Start();
+            }
+
             processQueueTask = Task.Factory.StartNew(() => ProcessLogMessageQueue(), TaskCreationOptions.LongRunning);
+        }
+
+        private void CleanOldLogs()
+        {
+            try
+            {
+                cleanupLogger.LogDebug("Checking existing log files, deleting everything older than {x} days", options.Value.NumberOfDaysToKeepLogs);
+                var logFiles = Directory.GetFiles(LogFolder, "*.log", SearchOption.AllDirectories);
+                foreach (var logFile in logFiles)
+                {
+                    var lastWriteTime = File.GetLastWriteTime(logFile);
+                    var refDate = DateTime.Now.Date.Subtract(TimeSpan.FromDays((double)options.Value.NumberOfDaysToKeepLogs!));
+                    if (lastWriteTime < refDate)
+                    {
+                        try
+                        {
+                            File.Delete(logFile);
+                        }
+                        catch (System.Exception exc)
+                        {
+                            cleanupLogger.LogWarning(exc, "Deleting log file '{file}' failed!", logFile);
+                        }
+                    }
+                }
+
+            }
+            catch (System.Exception exc)
+            {
+                cleanupLogger.LogError(exc, "CleanOldLogs failed!");
+                // var path = Path.Combine(LogFolder, "CleanOldLogsFailures.log");
+                // var msg = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {exc}";
+                // AddToLogQueue(new LogMessage(path, msg));
+            }
         }
 
         public ILogger CreateLogger(string categoryName)
