@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 
 namespace SimpleFileLogger
 {
-    public class FileLogger : ILogger
+    public interface IFileLogger : ILogger
+    {
+        public void LogToFile(string fileName, LogLevel logLevel, EventId eventId, Exception? exception, string? message, params object?[] args);
+    }
+    public class FileLogger : ILogger, IFileLogger
     {
         private readonly IFileLoggerProvider provider;
         private readonly string fileName;
@@ -29,14 +33,19 @@ namespace SimpleFileLogger
             return logLevel != LogLevel.None;
         }
 
-        public void Log<TState>(string fullFilePath, LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void LogToFile(string fileName, LogLevel logLevel, EventId eventId, Exception? exception, string? message, params object?[] args)
         {
-            var logRecord = string.Format("{0} [{1}] : {2} {3}\n",
-            "[" + DateTime.Now.ToString("HH:mm:ss") + "]",
-            logLevel.ToString(),
-            formatter(state, exception),
-            exception != null ? $"\n{exception}" : "");
+            var filePath = Path.Combine(provider.LogFolder, fileName);
+            // fileName might contain sub directories, therefore check the directory existance of the full path
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
 
+
+            var fullFilePath = $"{filePath}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
+            string text = message != null ? string.Format(message, args) : "";
+            var logRecord = BuildLogRecord(logLevel, text, exception, eventId);
+            
             provider.AddToLogQueue(new LogMessage(fullFilePath, logRecord));
         }
 
@@ -80,8 +89,18 @@ namespace SimpleFileLogger
 
 
             var fullFilePath = $"{filePath}{nameExtension}_{DateTime.Now.ToString("yyyy-MM-dd")}.log";
-
-            Log(fullFilePath, logLevel, eventId, state, exception, formatter);
+            var logRecord = BuildLogRecord(logLevel, formatter(state, exception), exception, eventId);
+            provider.AddToLogQueue(new LogMessage(fullFilePath, logRecord));
         }
+
+        private string BuildLogRecord(LogLevel logLevel, string text, Exception? exception, EventId eventId)
+        {
+            var excText = exception != null ? $"\n{exception}" : "";
+            var eventText = eventId.Id > 0 ? $"[{eventId.Name}(ID={eventId.Id})] " : "";
+            var logRecord = $"[{DateTime.Now.ToString("HH:mm:ss")}] [{logLevel.ToString()}] {eventText}: {text} {excText}\n";
+
+            return logRecord;
+        }
+
     }
 }

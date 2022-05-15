@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SimpleFileLogger.Example.Model;
+using SimpleFileLogger;
 
 namespace SimpleFileLogger.Example.Pages;
 
@@ -20,13 +21,15 @@ public class IndexModel : PageModel
     private readonly ILogger<IndexModel> logger;
     private bool logged = false;
     private string currentAwaitingLogGuid = Guid.NewGuid().ToString();
+    private readonly ILogger generalLogger;
 
     public IndexModel(ILogger<IndexModel> logger, ILoggerProvider loggerProvider, IConfiguration configuration)
-    {
+    {     
+        generalLogger = loggerProvider.CreateLogger("GeneralLogger");
         var fileLoggerProvider = (loggerProvider as IFileLoggerProvider)!;
         fileLoggerProvider.MessageLogged += MessageLogged;
         this.logger = logger;
-        
+
         var logConfig = new LogConfig();
         configuration.GetSection("Logging")?.Bind(logConfig);
         LogConfigString = logConfig.ToJson();
@@ -85,6 +88,12 @@ public class IndexModel : PageModel
         WaitForWriteLogEntry();
     }
 
+    public void OnPostLogToIndividualLog()
+    {
+        generalLogger.LogInformation("individualSub/individualLog", 0, null, $"my {{0}} text, {{1}}|{currentAwaitingLogGuid}", "interpolated", 5);
+        WaitForWriteLogEntry();
+    }
+
 
     /// <summary>
     /// Waits until either private filed logged is true (set in MessageLogged event handler) or 2 seconds pass, 
@@ -92,7 +101,7 @@ public class IndexModel : PageModel
     /// </summary>
     private void WaitForWriteLogEntry()
     {
-        var completedTaskIndex = Task.WaitAny(new []{
+        var completedTaskIndex = Task.WaitAny(new[]{
             Task.Factory.StartNew( () =>
             {
                 while (!logged)

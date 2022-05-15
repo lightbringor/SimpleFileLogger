@@ -33,12 +33,17 @@ namespace SimpleFileLogger
     {
         public Dictionary<int, EventOptions> EventOptionsDict { get; } = new Dictionary<int, EventOptions>();
         public string LogFolder { get; }
+
+        /// <summary>
+        /// This event is mainly to be used for testing in the example project and may not serve any purpose
+        /// in a real applicaction
+        /// </summary>
         public event EventHandler<MessageLoggedEventArgs>? MessageLogged;
 
         private readonly IOptions<FileLoggerOptions> options;
         private readonly BlockingCollection<LogMessage> logQueue = new BlockingCollection<LogMessage>();
         private readonly Task processQueueTask;
-        private ILogger cleanupLogger;
+        private ILogger? cleanupLogger;
         private System.Timers.Timer? cleanLogsTimer;
 
         public FileLoggerProvider(IOptions<FileLoggerOptions> options) // options get provided by DI
@@ -73,7 +78,7 @@ namespace SimpleFileLogger
         {
             try
             {
-                cleanupLogger.LogDebug("Checking existing log files, deleting everything older than {x} days", options.Value.NumberOfDaysToKeepLogs);
+                cleanupLogger!.LogDebug("Checking existing log files, deleting everything older than {x} days", options.Value.NumberOfDaysToKeepLogs);
                 var logFiles = Directory.GetFiles(LogFolder, "*.log", SearchOption.AllDirectories);
                 foreach (var logFile in logFiles)
                 {
@@ -87,7 +92,7 @@ namespace SimpleFileLogger
                         }
                         catch (System.Exception exc)
                         {
-                            cleanupLogger.LogWarning(exc, "Deleting log file '{file}' failed!", logFile);
+                            cleanupLogger!.LogWarning(exc, "Deleting log file '{file}' failed!", logFile);
                         }
                     }
                 }
@@ -95,7 +100,7 @@ namespace SimpleFileLogger
             }
             catch (System.Exception exc)
             {
-                cleanupLogger.LogError(exc, "CleanOldLogs failed!");
+                cleanupLogger!.LogError(exc, "CleanOldLogs failed!");
                 // var path = Path.Combine(LogFolder, "CleanOldLogsFailures.log");
                 // var msg = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {exc}";
                 // AddToLogQueue(new LogMessage(path, msg));

@@ -171,10 +171,31 @@ logger.LogTrace("Trace logging! largeObject is:\n{objJson}", largeObject.ToJson(
 
 <mark>**Note that Microsoft recommends to not us `$"{var} text"` interpolation but to use placeholders and parameters that are passed to the log method.**</mark>
 
-## Delete Old Log Files
+## Logging to Individual Log Files
+
+Aside from the file name and path control utilizing the `EventId` of a log entry, there is also the option
+to log to completely individual files via extension mehtods of `ILogger`. This can't be done with `ILogger<T>` since there is no way to cast it to `ILogger` respecitvely `IFileLogger` (at least I could not find a way).
+
+To use `IFileLogger` directly, you would have to inject an instance of `ILoggerProvider` to your class and create the `ILogger` manually:
+
+```csharp
+    public IndexModel(ILoggerProvider loggerProvider)
+    {     
+        this.generalLogger = loggerProvider.CreateLogger("GeneralLogger");
+    }
+
+    private void MyMethodWithLogging()
+    {
+        // ...
+        generalLogger.LogInformation("individualSub/individualLog", $"my {0} text, {1}", arg1, arg2);
+        // ...
+    }
+```
+**The extension for individual file logging can not take advantage of the `FormattedLogValues` object used as `TState`
+in `ILogger.Log<TState>` since this is an internal class. Therefore you cannot use named parameters and will have to fallback to standard number based indexed arguments or string interpolation.**
+
 
 ## More
-
 
 
 **SimpleFileLogger** internally uses a `BlockingCollection<LogMessage>` in a long running `Task` that decouples the logging from the working thread and prevents concurrent file access in scenarios where a lot of log messages have to be written in a short period of time.
