@@ -65,7 +65,7 @@ namespace SimpleFileLogger
             if (options.Value.NumberOfDaysToKeepLogs > 0)
             {
                 cleanupLogger = CreateLogger("CleanupLogFiles");
-                cleanLogsTimer = new System.Timers.Timer(TimeSpan.FromSeconds(10).TotalMilliseconds);
+                cleanLogsTimer = new System.Timers.Timer(TimeSpan.FromHours(1).TotalMilliseconds);
                 cleanLogsTimer.Elapsed += (s, e) => CleanOldLogs();
                 cleanLogsTimer.AutoReset = true;
                 cleanLogsTimer.Start();
